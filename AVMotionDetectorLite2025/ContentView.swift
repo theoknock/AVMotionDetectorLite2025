@@ -12,6 +12,7 @@ struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
     @State private var isRecording = false
     @State private var threshold: Double = 0.5
+    @State private var baseline: Double = 0.0
     
     var body: some View {
         VStack(spacing: 20) {
@@ -19,7 +20,7 @@ struct ContentView: View {
             (cameraManager.lastThresholdScore > threshold ? Color.red : Color.black)
                 .ignoresSafeArea()
             
-            Text("Frame Differencing")
+            Text("AVMotionDetectorLite2025")
                 .font(.largeTitle)
                 .bold()
             
@@ -45,15 +46,30 @@ struct ContentView: View {
                     cameraManager.stopRecording()
                 }
             }) {
-                Text(isRecording ? "Stop" : "MONITOR")
+                Text(isRecording ? "PAUSE" : "MONITOR")
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(isRecording ? Color.red : Color.green)
+                    .background(isRecording ? Color.green : Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(10)
             }
             (cameraManager.lastThresholdScore > threshold ? Color.red : Color.black)
                 .ignoresSafeArea()
+            
+            HStack {
+                Button("TARE") {
+                    baseline = cameraManager.lastThresholdScore
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color.gray)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+
+                Text(String(format: "Baseline: %.4f", baseline))
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+            }
             
 //            .alert("Motion Detected!", isPresented: $cameraManager.motionDetected) {
 //                Button("OK", role: .cancel) {

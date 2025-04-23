@@ -15,6 +15,7 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     @Published var motionDetected = false
     @Published var lastThresholdScore: Double = 0.0
     var threshold: Double = 0.5
+    var baseline: Double = 0.0
     var isRecording = false
 
     override init() {
@@ -103,7 +104,8 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
         }
 
         let maxDiff = Double(height * (bytesPerRow / 4)) * 255.0
-        return diffSum / maxDiff
+        let adjusted = diffSum - (baseline * maxDiff)
+        return adjusted > 0 ? adjusted / maxDiff : 0
     }
 
     func startRecording() {
