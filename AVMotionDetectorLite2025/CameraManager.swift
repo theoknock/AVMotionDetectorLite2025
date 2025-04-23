@@ -236,7 +236,7 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     func captureCurrentFrameAsUIImage() -> UIImage? {
         guard let pixelBuffer = latestPixelBuffer else { return nil }
         self.sceneReferencePixelBuffer = pixelBuffer
-        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
         let context = CIContext()
         if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
             return UIImage(cgImage: cgImage)

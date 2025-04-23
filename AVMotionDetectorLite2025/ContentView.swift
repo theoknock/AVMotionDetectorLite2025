@@ -25,14 +25,22 @@ struct ContentView: View {
             
                 .foregroundColor(.white)
             
-            CameraPreview(session: cameraManager.session)
-                .frame(maxWidth: UIScreen.main.bounds.size.width / 3, maxHeight: UIScreen.main.bounds.size.height / 3)
-                .cornerRadius(12)
-                .border(Color.white, width: 2)
-            
-            //                Text(String(format: "Baseline: %.4f", baseline))
-            //                    .font(.subheadline)
-            //                    .foregroundColor(.white)
+            ZStack(alignment: .topTrailing) {
+                CameraPreview(session: cameraManager.session)
+                    .frame(width: UIScreen.main.bounds.size.width, height: UIScreen.main.bounds.size.width)
+                    .cornerRadius(12)
+                    .border(Color.white, width: 2)
+
+                if let savedImage = referenceUIImage {
+                    Image(uiImage: savedImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: UIScreen.main.bounds.size.width / 3, height: UIScreen.main.bounds.size.width / 3)
+                        .clipped()
+                        .border(Color.blue, width: 2)
+                        .padding(8) // optional: gives some margin from the corner
+                }
+            }
             
             Slider(value: $threshold, in: 0...100, step: 1) {
                 Text("Threshold")
@@ -93,30 +101,24 @@ struct ContentView: View {
         //                .background(Color.gray)
         //                .foregroundColor(.white)
         //                .cornerRadius(10)
-        //
-        //                Button("Save Frame") {
-        //                    if let image = cameraManager.captureCurrentFrameAsUIImage() {
-        //                        referenceUIImage = image
-        //                    }
-        //                }
-        //                .padding(.horizontal)
-        //                .padding(.vertical, 8)
-        //                .background(Color.orange)
-        //                .foregroundColor(.white)
-        //                .cornerRadius(10)
+        
+        Button("Save Frame") {
+            if let image = cameraManager.captureCurrentFrameAsUIImage() {
+                referenceUIImage = image
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color.orange)
+        .foregroundColor(.white)
+        .cornerRadius(10)
         //
         //                Text(String(format: "Baseline: %.4f", baseline))
         //                    .font(.subheadline)
         //                    .foregroundColor(.white)
         //            }
         //
-        if let savedImage = referenceUIImage {
-            Image(uiImage: savedImage)
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: UIScreen.main.bounds.size.width / 3, maxHeight: UIScreen.main.bounds.size.height / 3)
-                .border(Color.blue, width: 2)
-        }
+        
         
     }
     //        .padding()
