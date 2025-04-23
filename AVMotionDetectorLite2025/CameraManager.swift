@@ -16,8 +16,11 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     private var previousPixelBuffer: CVPixelBuffer?
     private var originalReferencePixelBuffer: CVPixelBuffer?
     private var tareCapturePixelBuffer: CVPixelBuffer?
+    private var latestPixelBuffer: CVPixelBuffer?
+    private var sceneReferencePixelBuffer: CVPixelBuffer?
     @Published var motionDetected = false
     @Published var lastThresholdScore: Double = 0.0
+    @Published var sceneChangeScore: Double = 0.0
     @Published var tareCaptureImage: CGImage?
     var threshold: Double = 0.5
     var baseline: Double = 0.0
@@ -53,6 +56,10 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     func start() {
         DispatchQueue.global(qos: .userInitiated).async {
             self.session.startRunning()
+//            if self.session.isRunning {
+//                // set current pixelBuffer to tareCapturePixelBuffer
+//                self.tareCapturePixelBuffer = self.previousPixelBuffer
+//            }
         }
     }
 
@@ -63,17 +70,25 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard isRecording,
               let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        latestPixelBuffer = pixelBuffer
 
-        if let previous = previousPixelBuffer,
-           let original = originalReferencePixelBuffer {
-            let score: Double = max(0, calculateLuminanceDifference(between: original, and: previous) - self.baseline)
+        if let sceneReference = sceneReferencePixelBuffer {
+            let sceneScore = calculateLuminanceDifference(between: sceneReference, and: pixelBuffer)
+            DispatchQueue.main.async {
+                self.sceneChangeScore = sceneScore
+            }
+        }
+
+        if let reference = originalReferencePixelBuffer,
+           let previous = previousPixelBuffer {
+            let score: Double = max(0, calculateLuminanceDifference(between: reference, and: pixelBuffer))
 
             DispatchQueue.main.async {
                 self.lastThresholdScore = score
                 self.motionDetected = score > self.threshold
             }
         } else if let previous = previousPixelBuffer {
-            let score: Double = max(0, calculateLuminanceDifference(between: previous, and: pixelBuffer) - self.baseline)
+            let score: Double = max(0, calculateLuminanceDifference(between: previous, and: pixelBuffer))
             DispatchQueue.main.async {
                 self.lastThresholdScore = score
                 self.motionDetected = score > self.threshold
@@ -140,10 +155,10 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
             }
         }
 
-        let diffAvg: Double = (abs(diffSum / Double(width * height))) - self.baseline
-        print(self.baseline)
+        let diffAvg: Double = abs((diffSum / Double(width * height)) - self.baseline)
+//        print(diffAvg)
 
-        return abs(diffAvg);
+        return diffAvg
 
 //        var diffSum: Double = 0
 //        for y in 0..<height {
@@ -216,5 +231,16 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     
     func getScoreReferenceUIImage() -> UIImage? {
         return getTareCaptureUIImage()
+    }
+    
+    func captureCurrentFrameAsUIImage() -> UIImage? {
+        guard let pixelBuffer = latestPixelBuffer else { return nil }
+        self.sceneReferencePixelBuffer = pixelBuffer
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let context = CIContext()
+        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+            return UIImage(cgImage: cgImage)
+        }
+        return nil
     }
 }
