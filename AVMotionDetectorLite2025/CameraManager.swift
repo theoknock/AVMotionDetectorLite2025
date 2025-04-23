@@ -95,17 +95,18 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
 
         var diffSum: Double = 0
         for y in 0..<height {
-            for x in stride(from: 0, to: bytesPerRow, by: 4) {
-                let index = y * bytesPerRow + x
+            for x in 0..<width {
+                let index = y * bytesPerRow + x * 4
                 let luma1 = 0.299 * Double(ptr1[index + 2]) + 0.587 * Double(ptr1[index + 1]) + 0.114 * Double(ptr1[index])
                 let luma2 = 0.299 * Double(ptr2[index + 2]) + 0.587 * Double(ptr2[index + 1]) + 0.114 * Double(ptr2[index])
-                diffSum += abs(luma1 - luma2)
+                diffSum += abs(luma2 - luma1)
             }
         }
 
-        let maxDiff = Double(height * (bytesPerRow / 4)) * 255.0
-        let adjusted = diffSum - (baseline * maxDiff)
-        return adjusted > 0 ? adjusted / maxDiff : 0
+        let pixelCount = Double(width * height)
+        let average = diffSum / (pixelCount * 255.0)
+        let adjusted = average - baseline
+        return adjusted > 0 ? adjusted : 0
     }
 
     func startRecording() {
