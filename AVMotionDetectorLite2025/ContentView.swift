@@ -13,15 +13,14 @@ struct ContentView: View {
     @State private var isRecording = false
     @State private var threshold: Double = 0.5
     @State private var baseline: Double = 0.0
+    @State private var tareUIImage: UIImage? = nil
+    @State private var referenceUIImage: UIImage? = nil
+    @State private var scoreReferenceUIImage: UIImage? = nil
     
     var body: some View {
         VStack(spacing: 20) {
-            
-            (cameraManager.lastThresholdScore > threshold ? Color.red : Color.black)
-                .ignoresSafeArea()
-            
             Text("AVMotionDetectorLite2025")
-                .font(.largeTitle)
+                .scaledToFill()
                 .bold()
             
             CameraPreview(session: cameraManager.session)
@@ -65,16 +64,12 @@ struct ContentView: View {
                 .background(Color.gray)
                 .foregroundColor(.white)
                 .cornerRadius(10)
-
+                
                 Text(String(format: "Baseline: %.4f", baseline))
                     .font(.subheadline)
                     .foregroundColor(.white)
             }
             
-//            .alert("Motion Detected!", isPresented: $cameraManager.motionDetected) {
-//                Button("OK", role: .cancel) {
-//                }
-//            }
         }
         .padding()
     }

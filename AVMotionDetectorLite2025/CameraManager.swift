@@ -6,14 +6,19 @@
 //
 
 import AVFoundation
+import CoreImage
+import UIKit
 
 class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     let session = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
 
     private var previousPixelBuffer: CVPixelBuffer?
+    private var originalReferencePixelBuffer: CVPixelBuffer?
+    private var tareCapturePixelBuffer: CVPixelBuffer?
     @Published var motionDetected = false
     @Published var lastThresholdScore: Double = 0.0
+    @Published var tareCaptureImage: CGImage?
     var threshold: Double = 0.5
     var baseline: Double = 0.0
     var isRecording = false
@@ -59,7 +64,23 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
         guard isRecording,
               let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
 
-        if let previous = previousPixelBuffer {
+        if let previous = previousPixelBuffer,
+           let original = originalReferencePixelBuffer {
+            let score: Double = calculateLuminanceDifference(between: original, and: previous)
+//            let diff2: Double = calculateLuminanceDifference(between: previous, and: pixelBuffer)
+//            let diff3 = calculateLuminanceDifference(between: original, and: pixelBuffer)
+//            let score: Double = (diff1 + diff2) / 2.0
+            
+//            if pixelBuffer == original {
+//                tareCapturePixelBuffer = pixelBuffer
+//                getTareCaptureUIImage()
+//            }
+
+            DispatchQueue.main.async {
+                self.lastThresholdScore = score
+                self.motionDetected = score > self.threshold
+            }
+        } else if let previous = previousPixelBuffer {
             let diff = calculateLuminanceDifference(between: previous, and: pixelBuffer)
             DispatchQueue.main.async {
                 self.lastThresholdScore = diff
@@ -92,21 +113,35 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
 
         let ptr1 = baseAddress1.assumingMemoryBound(to: UInt8.self)
         let ptr2 = baseAddress2.assumingMemoryBound(to: UInt8.self)
-
+        
         var diffSum: Double = 0
         for y in 0..<height {
             for x in 0..<width {
                 let index = y * bytesPerRow + x * 4
-                let luma1 = 0.299 * Double(ptr1[index + 2]) + 0.587 * Double(ptr1[index + 1]) + 0.114 * Double(ptr1[index])
-                let luma2 = 0.299 * Double(ptr2[index + 2]) + 0.587 * Double(ptr2[index + 1]) + 0.114 * Double(ptr2[index])
-                diffSum += abs(luma2 - luma1)
+                let luma1: Double = 0.299 * Double(ptr1[index + 2]) + 0.587 * Double(ptr1[index + 1]) + 0.114 * Double(ptr1[index])
+                let luma2: Double = 0.299 * Double(ptr2[index + 2]) + 0.587 * Double(ptr2[index + 1]) + 0.114 * Double(ptr2[index])
+                diffSum += (luma2 - luma1)
             }
         }
+        
+        let diffAvg: Double = abs(diffSum / Double(width * height))
+        
+        return abs(diffAvg)
 
-        let pixelCount = Double(width * height)
-        let average = diffSum / (pixelCount * 255.0)
-        let adjusted = average - baseline
-        return adjusted > 0 ? adjusted : 0
+//        var diffSum: Double = 0
+//        for y in 0..<height {
+//            for x in 0..<width {
+//                let index = y * bytesPerRow + x * 4
+//                let luma1 = 0.299 * Double(ptr1[index + 2]) + 0.587 * Double(ptr1[index + 1]) + 0.114 * Double(ptr1[index])
+//                let luma2 = 0.299 * Double(ptr2[index + 2]) + 0.587 * Double(ptr2[index + 1]) + 0.114 * Double(ptr2[index])
+//                diffSum += abs(luma2 - luma1)
+//            }
+//        }
+
+//        let pixelCount = Double(width * height)
+//        let average = diffSum / (pixelCount * 255.0)
+//        let adjusted = average - baseline
+//        return adjusted > 0 ? adjusted : 0
     }
 
     func startRecording() {
@@ -117,5 +152,52 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
     func stopRecording() {
         isRecording = false
         previousPixelBuffer = nil
+    }
+
+    func setOriginalReferenceFrame(from pixelBuffer: CVPixelBuffer) {
+        originalReferencePixelBuffer = pixelBuffer
+        if let oldest = previousPixelBuffer {
+            tareCapturePixelBuffer = oldest
+            tareCaptureImage = convertToCGImage(from: oldest)
+        }
+    }
+
+    private func convertToCGImage(from pixelBuffer: CVPixelBuffer) -> CGImage? {
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let context = CIContext()
+        return context.createCGImage(ciImage, from: ciImage.extent)
+    }
+
+    func clearOriginalReferenceFrame() {
+        originalReferencePixelBuffer = nil
+    }
+
+    func clearTareCaptureFrame() {
+        tareCapturePixelBuffer = nil
+        tareCaptureImage = nil
+    }
+    
+    func getTareCaptureUIImage() -> UIImage? {
+        guard let buffer = tareCapturePixelBuffer else { return nil }
+        let ciImage = CIImage(cvPixelBuffer: buffer)
+        let context = CIContext()
+        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+            return UIImage(cgImage: cgImage)
+        }
+        return nil
+    }
+    
+    func getOriginalReferenceUIImage() -> UIImage? {
+        guard let buffer = originalReferencePixelBuffer else { return nil }
+        let ciImage = CIImage(cvPixelBuffer: buffer)
+        let context = CIContext()
+        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+            return UIImage(cgImage: cgImage)
+        }
+        return nil
+    }
+    
+    func getScoreReferenceUIImage() -> UIImage? {
+        return getTareCaptureUIImage()
     }
 }
