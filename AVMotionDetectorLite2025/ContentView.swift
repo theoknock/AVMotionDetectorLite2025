@@ -23,7 +23,6 @@ struct ContentView: View {
             Text("AVMotionDetectorLite2025")
                 .scaledToFill()
                 .bold()
-            
                 .foregroundColor(.white)
             
             ZStack(alignment: .topTrailing) {
@@ -43,28 +42,35 @@ struct ContentView: View {
                 }
             }
             
-            ZStack {
-                HStack {
-                    Slider(value: $threshold, in: 0...100, step: 1) {
-                        Text("Threshold")
-                            .foregroundColor(.white)
-                    }
-                    
-                    Button("TARE") {
-                        baseline = cameraManager.lastThresholdScore
-                        threshold = baseline
-                        cameraManager.threshold = baseline
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                    .background(Color.gray)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
+            ZStack(alignment: .center) {
+                Slider(value: $threshold, in: 0...100, step: 1)
+//                    .padding(.top, 20) // Make space for the overlay text
                 
-                Text(String(format: "Threshold: %.2f", threshold))
-                    .foregroundColor(.white)
+                Text(String(format: "%.0f", threshold))
+                    .font(.title2)
+                    .foregroundColor(.orange)
+                    .bold()
+                    .shadow(radius: 1.5)
             }
+            
+            Button("TARE") {
+                baseline = cameraManager.lastThresholdScore
+                threshold = baseline
+                cameraManager.threshold = baseline
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color.gray)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            
+            //                Text(String(format: "%.0f", threshold))
+            //                    .font(.title2)
+            //                    .foregroundColor(.orange)
+            //                    .bold()
+            //                    .shadow(radius: 1.5)
+            //                    .frame(width: .infinity)
+            
             
             Slider(value: $sceneChangeThreshold, in: 0...100, step: 1) {
                 Text("Scene Change Threshold")
