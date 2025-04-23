@@ -66,25 +66,17 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
 
         if let previous = previousPixelBuffer,
            let original = originalReferencePixelBuffer {
-            let score: Double = calculateLuminanceDifference(between: original, and: previous)
-//            let diff2: Double = calculateLuminanceDifference(between: previous, and: pixelBuffer)
-//            let diff3 = calculateLuminanceDifference(between: original, and: pixelBuffer)
-//            let score: Double = (diff1 + diff2) / 2.0
-            
-//            if pixelBuffer == original {
-//                tareCapturePixelBuffer = pixelBuffer
-//                getTareCaptureUIImage()
-//            }
+            let score: Double = max(0, calculateLuminanceDifference(between: original, and: previous) - self.baseline)
 
             DispatchQueue.main.async {
                 self.lastThresholdScore = score
                 self.motionDetected = score > self.threshold
             }
         } else if let previous = previousPixelBuffer {
-            let diff = calculateLuminanceDifference(between: previous, and: pixelBuffer)
+            let score: Double = max(0, calculateLuminanceDifference(between: previous, and: pixelBuffer) - self.baseline)
             DispatchQueue.main.async {
-                self.lastThresholdScore = diff
-                self.motionDetected = diff > self.threshold
+                self.lastThresholdScore = score
+                self.motionDetected = score > self.threshold
             }
         }
 
@@ -114,6 +106,30 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
         let ptr1 = baseAddress1.assumingMemoryBound(to: UInt8.self)
         let ptr2 = baseAddress2.assumingMemoryBound(to: UInt8.self)
         
+//        var diffSum: Double = 0
+//        for y in 0..<height {
+//            for x in 0..<width {
+//                let index = y * bytesPerRow + x * 4
+//
+//                // Extract RGB components from both frames
+//                let r1 = Double(ptr1[index + 2])
+//                let g1 = Double(ptr1[index + 1])
+//                let b1 = Double(ptr1[index + 0])
+//
+//                let r2 = Double(ptr2[index + 2])
+//                let g2 = Double(ptr2[index + 1])
+//                let b2 = Double(ptr2[index + 0])
+//
+//                // Euclidean distance in RGB space
+//                let deltaE = sqrt(pow(r2 - r1, 2) + pow(g2 - g1, 2) + pow(b2 - b1, 2))
+//
+//                diffSum += deltaE
+//            }
+//        }
+//
+//        let diffAvg: Double = diffSum / Double(width * height)
+//        return diffAvg
+        
         var diffSum: Double = 0
         for y in 0..<height {
             for x in 0..<width {
@@ -123,10 +139,11 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
                 diffSum += (luma2 - luma1)
             }
         }
-        
-        let diffAvg: Double = abs(diffSum / Double(width * height))
-        
-        return abs(diffAvg)
+
+        let diffAvg: Double = (abs(diffSum / Double(width * height))) - self.baseline
+        print(self.baseline)
+
+        return abs(diffAvg);
 
 //        var diffSum: Double = 0
 //        for y in 0..<height {
