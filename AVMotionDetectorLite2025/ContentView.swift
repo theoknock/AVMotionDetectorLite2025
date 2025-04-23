@@ -23,12 +23,16 @@ struct ContentView: View {
                 .scaledToFill()
                 .bold()
             
-            .foregroundColor(.white)
+                .foregroundColor(.white)
             
             CameraPreview(session: cameraManager.session)
                 .frame(maxWidth: UIScreen.main.bounds.size.width / 3, maxHeight: UIScreen.main.bounds.size.height / 3)
                 .cornerRadius(12)
                 .border(Color.white, width: 2)
+            
+            //                Text(String(format: "Baseline: %.4f", baseline))
+            //                    .font(.subheadline)
+            //                    .foregroundColor(.white)
             
             Slider(value: $threshold, in: 0...100, step: 1) {
                 Text("Threshold")
@@ -37,73 +41,86 @@ struct ContentView: View {
             Text(String(format: "Threshold: %.2f", threshold))
                 .foregroundColor(.white)
             
-            Text(String(format: "Score: %.4f", cameraManager.lastThresholdScore))
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            Text(String(format: "Scene Change Score: %.4f", cameraManager.sceneChangeScore))
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            Button(action: {
-                isRecording.toggle()
-                cameraManager.threshold = threshold
-                if isRecording {
-                    cameraManager.startRecording()
-                } else {
-                    cameraManager.stopRecording()
-                }
-            }) {
-                Text(isRecording ? "PAUSE" : "MONITOR")
-                    .padding()
-                                    .frame(maxWidth: .infinity)
-                    .background(isRecording ? Color.green : Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+            Button("TARE") {
+                baseline = cameraManager.lastThresholdScore
+                threshold = baseline
+                cameraManager.threshold = baseline
             }
-            (cameraManager.lastThresholdScore > threshold ? Color.red : Color.black)
-                .ignoresSafeArea()
-            
-            HStack {
-                Button("TARE") {
-                    baseline = cameraManager.lastThresholdScore
-                    threshold = baseline
-                    cameraManager.threshold = baseline
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.gray)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Button("Save Frame") {
-                    if let image = cameraManager.captureCurrentFrameAsUIImage() {
-                        referenceUIImage = image
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Text(String(format: "Baseline: %.4f", baseline))
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-            }
-            
-            if let savedImage = referenceUIImage {
-                Image(uiImage: savedImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: UIScreen.main.bounds.size.width / 3, maxHeight: UIScreen.main.bounds.size.height / 3)
-                    .border(Color.blue, width: 2)
-            }
-            
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color.gray)
+            .foregroundColor(.white)
+            .cornerRadius(10)
         }
         .padding()
         .background(Color.black.opacity(1.0))
+        
+        Text(String(format: "Score: %.4f", cameraManager.lastThresholdScore))
+            .font(.headline)
+            .foregroundColor(.white)
+        
+        Text(String(format: "Scene Change Score: %.4f", cameraManager.sceneChangeScore))
+            .font(.headline)
+            .foregroundColor(.white)
+        
+        Button(action: {
+            isRecording.toggle()
+            cameraManager.threshold = threshold
+            if isRecording {
+                cameraManager.startRecording()
+            } else {
+                cameraManager.stopRecording()
+            }
+        }) {
+            Text(isRecording ? "PAUSE" : "MONITOR")
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(isRecording ? Color.green : Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+        }
+        (cameraManager.lastThresholdScore > threshold ? Color.red : Color.black)
+            .ignoresSafeArea()
+        
+        //            HStack {
+        //                Button("TARE") {
+        //                    baseline = cameraManager.lastThresholdScore
+        //                    threshold = baseline
+        //                    cameraManager.threshold = baseline
+        //                }
+        //                .padding(.horizontal)
+        //                .padding(.vertical, 8)
+        //                .background(Color.gray)
+        //                .foregroundColor(.white)
+        //                .cornerRadius(10)
+        //
+        //                Button("Save Frame") {
+        //                    if let image = cameraManager.captureCurrentFrameAsUIImage() {
+        //                        referenceUIImage = image
+        //                    }
+        //                }
+        //                .padding(.horizontal)
+        //                .padding(.vertical, 8)
+        //                .background(Color.orange)
+        //                .foregroundColor(.white)
+        //                .cornerRadius(10)
+        //
+        //                Text(String(format: "Baseline: %.4f", baseline))
+        //                    .font(.subheadline)
+        //                    .foregroundColor(.white)
+        //            }
+        //
+        if let savedImage = referenceUIImage {
+            Image(uiImage: savedImage)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: UIScreen.main.bounds.size.width / 3, maxHeight: UIScreen.main.bounds.size.height / 3)
+                .border(Color.blue, width: 2)
+        }
+        
     }
+    //        .padding()
+    //        .background(Color.black.opacity(1.0))
 }
 
 #Preview {
