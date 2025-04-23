@@ -12,26 +12,30 @@ struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
     @State private var isRecording = false
     @State private var threshold: Double = 0.5
-
+    
     var body: some View {
         VStack(spacing: 20) {
+            
+            (cameraManager.lastThresholdScore > threshold ? Color.red : Color.black)
+                .ignoresSafeArea()
+            
             Text("Frame Differencing")
                 .font(.largeTitle)
                 .bold()
-
+            
             CameraPreview(session: cameraManager.session)
                 .frame(height: 300)
                 .cornerRadius(12)
                 .border(Color.white, width: 2)
-
+            
             Slider(value: $threshold, in: 0...1, step: 0.0001) {
                 Text("Threshold")
             }
             Text(String(format: "Threshold: %.2f", threshold))
-
+            
             Text(String(format: "Score: %.4f", cameraManager.lastThresholdScore))
                 .font(.headline)
-
+            
             Button(action: {
                 isRecording.toggle()
                 cameraManager.threshold = threshold
@@ -48,9 +52,13 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
             }
-            .alert("Motion Detected!", isPresented: $cameraManager.motionDetected) {
-                Button("OK", role: .cancel) { }
-            }
+            (cameraManager.lastThresholdScore > threshold ? Color.red : Color.black)
+                .ignoresSafeArea()
+            
+//            .alert("Motion Detected!", isPresented: $cameraManager.motionDetected) {
+//                Button("OK", role: .cancel) {
+//                }
+//            }
         }
         .padding()
     }
@@ -65,20 +73,20 @@ struct CameraPreview: UIViewRepresentable {
         override class var layerClass: AnyClass {
             AVCaptureVideoPreviewLayer.self
         }
-
+        
         var videoPreviewLayer: AVCaptureVideoPreviewLayer {
             return layer as! AVCaptureVideoPreviewLayer
         }
     }
-
+    
     let session: AVCaptureSession
-
+    
     func makeUIView(context: Context) -> VideoPreviewView {
         let view = VideoPreviewView()
         view.videoPreviewLayer.session = session
         view.videoPreviewLayer.videoGravity = .resizeAspectFill
         return view
     }
-
+    
     func updateUIView(_ uiView: VideoPreviewView, context: Context) {}
 }
