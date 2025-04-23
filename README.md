@@ -2,7 +2,7 @@
 
 **Next-gen Motion Detection and Scene Monitoring in Real Time**  
 
-AVMotionDetector2025 is a Swift-powered iOS/macOS app that combines traditional **motion detection** with a powerful new feature: **scene change monitoring**. Not only can it detect moving intruders, but it can also alert you when something appears—or disappears—without moving at all.
+AVMotionDetector2025 is a Swift-powered iOS app that combines traditional **motion detection** with a powerful new feature: **scene change monitoring**. Not only can it detect moving intruders, but it can also alert you when something appears—or disappears—without moving at all.
 
 ![AVMotionDetector2025Icon-small](https://github.com/user-attachments/assets/9286dfda-bf43-43a3-aa11-f29c1f5bf9bc)
 
@@ -50,5 +50,3 @@ AVMotionDetector2025 is a Swift-powered iOS/macOS app that combines traditional 
 ## 🤖 Built For
 
 Security use-cases, art installations, wildlife monitoring, or anyone curious about what’s *really* changing in their environment—even when nothing appears to move.
-
-![AVMotionDetector2025Icon-small](https://github.com/user-attachments/assets/9286dfda-bf43-43a3-aa11-f29c1f5bf9bc)
