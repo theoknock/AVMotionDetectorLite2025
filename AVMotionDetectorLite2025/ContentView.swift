@@ -12,6 +12,7 @@ struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
     @State private var isRecording = false
     @State private var threshold: Double = 0.5
+    @State private var sceneChangeThreshold: Double = 0.5
     @State private var baseline: Double = 0.0
     @State private var tareUIImage: UIImage? = nil
     @State private var referenceUIImage: UIImage? = nil
@@ -30,7 +31,7 @@ struct ContentView: View {
                     .frame(width: UIScreen.main.bounds.size.width, height: UIScreen.main.bounds.size.width)
                     .cornerRadius(12)
                     .border(Color.white, width: 2)
-
+                
                 if let savedImage = referenceUIImage {
                     Image(uiImage: savedImage)
                         .resizable()
@@ -42,21 +43,44 @@ struct ContentView: View {
                 }
             }
             
-            Slider(value: $threshold, in: 0...100, step: 1) {
-                Text("Threshold")
+            ZStack {
+                HStack {
+                    Slider(value: $threshold, in: 0...100, step: 1) {
+                        Text("Threshold")
+                            .foregroundColor(.white)
+                    }
+                    
+                    Button("TARE") {
+                        baseline = cameraManager.lastThresholdScore
+                        threshold = baseline
+                        cameraManager.threshold = baseline
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(Color.gray)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                
+                Text(String(format: "Threshold: %.2f", threshold))
                     .foregroundColor(.white)
             }
-            Text(String(format: "Threshold: %.2f", threshold))
+            
+            Slider(value: $sceneChangeThreshold, in: 0...100, step: 1) {
+                Text("Scene Change Threshold")
+                    .foregroundColor(.white)
+            }
+            Text(String(format: "Scene Change Threshold: %.2f", sceneChangeThreshold))
                 .foregroundColor(.white)
             
-            Button("TARE") {
-                baseline = cameraManager.lastThresholdScore
-                threshold = baseline
-                cameraManager.threshold = baseline
+            
+            
+            Button("TARE (Scene Change)") {
+                sceneChangeThreshold = cameraManager.sceneChangeScore
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
-            .background(Color.gray)
+            .background(Color.purple)
             .foregroundColor(.white)
             .cornerRadius(10)
         }
