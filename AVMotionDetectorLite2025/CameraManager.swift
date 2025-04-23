@@ -243,4 +243,8 @@ class CameraManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
         }
         return nil
     }
+    
+    func setThresholdFromBaseline() {
+        self.threshold = self.baseline
+    }
 }

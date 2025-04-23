@@ -67,6 +67,8 @@ struct ContentView: View {
             HStack {
                 Button("TARE") {
                     baseline = cameraManager.lastThresholdScore
+                    threshold = baseline
+                    cameraManager.threshold = baseline
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 8)
